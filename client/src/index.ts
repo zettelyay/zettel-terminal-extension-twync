@@ -1,7 +1,7 @@
 import {
   ExtensionScope,
   WindowWithExtensionFunction,
-} from "@zettelproject/web-extension-api";
+} from "@zettelproject/terminal-extension-api";
 import { PageExtensionData } from "./types";
 
 void ((window as WindowWithExtensionFunction).extensionFunction = function (
