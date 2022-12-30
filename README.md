@@ -1,6 +1,8 @@
-# Zettel Terminal Extension Seed
+# Zettel Terminal Extension Twync
 
-This repository contains a seed project to speed-up developing extensions for [Zettel Terminal](https://app.zettel.ooo). You can read more about the product [here](http://zettel.ooo).
+This repository contains both client-side and server-side implementation for \_Twitter sync (a.k.a. Twync) extension for [Zettel Terminal](https://app.zettel.ooo). You can read more about the product [here](http://zettel.ooo).
+
+It's created based on the [seed project **zettelyay/zettel-terminal-extension-seed**](https://github.com/zettelyay/zettel-terminal-extension-seed) to speed-up the implementation. Feel free to develop this work further or start developing your own extension based on the same seed project.
 
 The repository insists of two projects:
 
@@ -32,6 +34,4 @@ The repository insists of two projects:
      server$ npm start     # For production
      ```
 
-Both projects are filled with some dummy implementations to show-case how to setup things, feel free to modify this as you like, or even start your own projects and follow the approaches in this seed project.
-
-For more information, please [contact the development](mailto:ahs502@gmail.com) team.
+For more information, please [contact the development team](mailto:ahs502@gmail.com).
