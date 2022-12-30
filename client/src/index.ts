@@ -2,7 +2,7 @@ import {
   ExtensionScope,
   WindowWithExtensionFunction,
 } from "@zettelproject/terminal-extension-api";
-import { PageExtensionData } from "./types";
+import { PageExtensionData } from "../../shared/types";
 
 void ((window as WindowWithExtensionFunction).extensionFunction = function (
   api
@@ -14,37 +14,37 @@ void ((window as WindowWithExtensionFunction).extensionFunction = function (
 
         let pageExtensionData: PageExtensionData;
 
+        const loadingIndicatorRegistration = this.register(
+          pagePanelRenderedApi.registry.loadingIndicator(
+            "Getting twitter user data..."
+          ),
+          { initiallyInactive: true }
+        );
+
         const quickActionRegistration = this.register(
           pagePanelRenderedApi.registry.quickAction({
-            title: "My extension",
-            description: "My extension description",
+            title: "Twitter sync v2",
+            description: "Synchronize all twitters from a Twitter account", // 'Loading...',
             avatarUrl: api.extensionHeader.avatar.file
               ? api.getFileUrl(api.extensionHeader.avatar.file)
               : api.extensionHeader.avatar.dataUrl,
             disabled: true,
             switchChecked: false,
             async onClick() {
-              activatedApi.access.showMessage(
-                "My extension",
-                "This is a message from my extension!",
-                { variant: "success" }
-              );
+              setDisabled(true);
+              await tryToConnect();
+              setDisabled(false);
             },
             async onToggleSwitch(checked) {
-              quickActionRegistration.reference.update?.({ disabled: true });
-              await setPageExtensionData(
-                checked ? { enabled: true } : undefined
-              );
-              quickActionRegistration.reference.update?.({ disabled: false });
+              setDisabled(true);
+              if (checked) {
+                await tryToConnect();
+              } else {
+                await setPageExtensionData(undefined);
+              }
+              setDisabled(false);
             },
           })
-        );
-
-        const loadingIndicatorRegistration = this.register(
-          pagePanelRenderedApi.registry.loadingIndicator(
-            `Updating ${api.extensionHeader.name} status...`
-          ),
-          { initiallyInactive: true }
         );
 
         const tipMessageRegistration = this.register(
@@ -56,10 +56,12 @@ void ((window as WindowWithExtensionFunction).extensionFunction = function (
 <div>
   <p style="display: flex; align-items: center; gap: 10px;">
     <img src="${api.getFileUrl("idea.png")}" alt="tip" />
-    This is a tip about my extension!
+    All new tweets of "${state.userName}" are
+    automatically imported into this page.
   </p>
   <p>
-    This will show up when the extension is enabled on the page.
+    Click on the extension's quick action to disable
+    the behavior or change the twitter account.
   </p>
 </div>
 `;
@@ -84,13 +86,22 @@ void ((window as WindowWithExtensionFunction).extensionFunction = function (
           ] as PageExtensionData
         );
 
+        function setDisabled(disabled: boolean): void {
+          quickActionRegistration.reference.update?.({ disabled });
+        }
+
         function applyPageExtensionData(
           newPageExtensionData: PageExtensionData
         ): void {
           pageExtensionData = newPageExtensionData;
+          if (pageExtensionData?.userName && !pageExtensionData.userId) {
+            loadingIndicatorRegistration.activate();
+          } else {
+            loadingIndicatorRegistration.deactivate();
+          }
           quickActionRegistration.reference.update?.({
             disabled: false,
-            switchChecked: Boolean(pageExtensionData?.enabled),
+            switchChecked: Boolean(pageExtensionData?.userName),
           });
           tipMessageRegistration.reference.update?.({
             hidden: !pageExtensionData,
@@ -102,16 +113,32 @@ void ((window as WindowWithExtensionFunction).extensionFunction = function (
           newPageExtensionData: PageExtensionData
         ): Promise<void> {
           try {
-            loadingIndicatorRegistration.activate();
             await signedInApi.access.setPageExtensionData<PageExtensionData>(
               pagePanelRenderedApi.target.pageId,
               newPageExtensionData
             );
           } catch {
             // Do nothing!
-          } finally {
-            loadingIndicatorRegistration.deactivate();
           }
+        }
+
+        async function tryToConnect(): Promise<void> {
+          let userName: string;
+          try {
+            userName = await activatedApi.access.commandBarInputString({
+              prompt: "Insert your Twitter user name",
+              placeholder: "username",
+              initialValue: pageExtensionData?.userName,
+            });
+          } catch {
+            return;
+          }
+          if (
+            userName === pageExtensionData?.userName ||
+            (!userName && !pageExtensionData?.userName)
+          )
+            return;
+          await setPageExtensionData(userName ? { userName } : undefined);
         }
       });
     });
