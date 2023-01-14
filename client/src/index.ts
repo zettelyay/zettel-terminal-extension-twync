@@ -1,4 +1,5 @@
 import {
+  ExtensionLifeSpans,
   ExtensionScope,
   WindowWithExtensionFunction,
 } from "@zettelproject/terminal-extension-api";
@@ -28,6 +29,9 @@ void ((window as WindowWithExtensionFunction).extensionFunction = function (
             avatarUrl: api.extensionHeader.avatar.file
               ? api.getFileUrl(api.extensionHeader.avatar.file)
               : api.extensionHeader.avatar.dataUrl,
+            category:
+              ExtensionLifeSpans.PagePanelRendered.QuickAction.Category
+                .Productivity,
             disabled: true,
             switchChecked: false,
             async onClick() {

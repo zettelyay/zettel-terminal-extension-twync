@@ -2,13 +2,14 @@ import { ZettelTypes } from "@zettelproject/api-server";
 import { PageExtensionData } from "../../shared/types";
 import { fetchTwitterUserId } from "./fetchTwitterUserId";
 import { fetchTwitterUserTweets } from "./fetchTwitterUserTweets";
+import { generateId } from "./generateId";
 import { Tweet } from "./types";
 import { zettelExtensionRestService } from "./zettelExtensionRestService";
 
 export async function importNewTweetsForPage(
   page: ZettelTypes.Services.Extension.PageEntityForExtension<PageExtensionData>
 ): Promise<void> {
-  let extensionManagedData = page.extensionManagedData as PageExtensionData;
+  let { extensionManagedData } = page;
   try {
     if (!extensionManagedData?.userName) return;
 
@@ -40,15 +41,35 @@ export async function importNewTweetsForPage(
           (tweet) =>
             tweet.created_at !== extensionManagedData?.lastSynchronizedTimestamp
         )
-        .map((tweet) =>
-          zettelExtensionRestService.addCard({
+        .map((tweet) => {
+          const tweetUrl = `https://twitter.com/${extensionManagedData?.userName}/status/${tweet.id}`;
+          return zettelExtensionRestService.addCard({
             card: {
               ownerId: page.ownerId,
               pageId: page.id,
-              text: tweet.text,
+              blocks: [
+                {
+                  type: ZettelTypes.Model.Block.Type.Paragraph,
+                  id: generateId(),
+                  styledText: {
+                    text: tweetUrl,
+                    annotations: [
+                      {
+                        type: ZettelTypes.Model.Block.StyledText.Annotation.Type
+                          .PlainLink,
+                        id: generateId(),
+                        from: 0,
+                        to: tweetUrl.length,
+                        url: tweetUrl,
+                      },
+                    ],
+                    styleGroups: [],
+                  },
+                },
+              ],
             },
-          })
-        )
+          });
+        })
     );
   } finally {
     if (extensionManagedData !== page.extensionManagedData) {

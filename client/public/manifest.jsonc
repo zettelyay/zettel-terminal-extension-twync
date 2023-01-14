@@ -4,7 +4,7 @@
 {
   "$schema": "../node_modules/@zettelproject/terminal-extension-api/dist/manifest-json-schema.json",
   "appId": "twync2", // Identifier of your extension, must be unique within all your extensions.
-  "version": "0.4.21", // Very important. Update it so that the client is updated to the latest extension release.
+  "version": "1.0.0", // Very important. Update it so that the client is updated to the latest extension release.
   "name": "Twitter sync v2", // Display name of your extension in the Zettel app store.
   "description": "Synchronize all twitters from any Twitter account", // Description of your extension in the Zettel app store.
   "avatar": {
